@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
 <title>Kelime Anlamı</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +24,7 @@ body{
   justify-content:center;
   background:linear-gradient(145deg,#f8f6f3 0%,#f0ece6 50%,#e8e4dd 100%);
   padding:2rem 1rem;
-  -webkit-font-smoothing:antialiased
+  -webkit-font-smoothing:antialiased;
 }
 
 @keyframes rise{
@@ -38,7 +43,7 @@ body{
   border:1px solid rgba(255,255,255,.6);
   box-shadow:0 4px 24px rgba(0,0,0,.04),0 16px 56px rgba(0,0,0,.06);
   text-align:center;
-  animation:rise .6s ease both
+  animation:rise .6s ease both;
 }
 
 .word{
@@ -47,7 +52,7 @@ body{
   color:#1a1a1a;
   margin-bottom:1rem;
   line-height:1.1;
-  word-break:break-word
+  word-break:break-word;
 }
 
 .line{
@@ -56,7 +61,7 @@ body{
   background:linear-gradient(90deg,#c8b898,#a89878);
   margin:0 auto 1.4rem;
   border-radius:2px;
-  opacity:.6
+  opacity:.6;
 }
 
 .meaning{
@@ -66,13 +71,13 @@ body{
   color:#5a5550;
   line-height:1.8;
   margin-bottom:2.5rem;
-  letter-spacing:.01em
+  letter-spacing:.01em;
 }
 
 .err{
   color:#c44;
   font-size:1rem;
-  padding:2rem
+  padding:2rem;
 }
 
 @media(max-width:480px){
@@ -84,47 +89,89 @@ body{
 
 <body>
 
-<div class="card" id="c"></div>
+<div class="card" id="c">
+  <div class="word" id="w"></div>
+  <div class="line"></div>
+  <div class="meaning" id="m"></div>
+</div>
 
 <script>
+let sonOkunanVeri = "";
+
+function kartiYaz(kelime, anlam){
+  document.getElementById("c").innerHTML = `
+    <div class="word" id="w"></div>
+    <div class="line"></div>
+    <div class="meaning" id="m"></div>
+  `;
+
+  document.getElementById("w").textContent = kelime || "";
+  document.getElementById("m").textContent = anlam || "";
+  document.title = kelime ? kelime + " - Anlamı" : "Kelime Anlamı";
+}
+
+function hataYaz(mesaj){
+  document.getElementById("c").innerHTML =
+    '<p class="err">' + mesaj + '</p>';
+}
+
 function oku(){
   try{
     if(location.hash && location.hash.indexOf("#v=") === 0){
-      var d = JSON.parse(decodeURIComponent(location.hash.substring(3)));
+      const raw = decodeURIComponent(location.hash.substring(3));
 
-      document.getElementById("c").innerHTML = `
-        <div class="word" id="w"></div>
-        <div class="line"></div>
-        <div class="meaning" id="m"></div>
-      `;
+      if(raw === sonOkunanVeri){
+        return;
+      }
 
-      document.getElementById("w").textContent = d.k || "";
-      document.getElementById("m").textContent = d.a || "";
+      sonOkunanVeri = raw;
+
+      const d = JSON.parse(raw);
+
+      kartiYaz(d.k, d.a);
+
+      /*
+        KRİTİK ÇÖZÜM:
+        QR okunduktan sonra URL'deki #v= kısmını temizliyoruz.
+        Böylece başka QR okutulunca tarayıcı aynı sayfada takılı kalmıyor.
+      */
+      setTimeout(function(){
+        history.replaceState(
+          null,
+          document.title,
+          location.pathname + location.search
+        );
+      }, 300);
 
     } else {
-      document.getElementById("c").innerHTML =
-        '<p class="err">QR kodu yanlış okundu veya veri bulunamadı.</p>';
+      // Sayfa boş açıldıysa eski kartı bozma
+      if(!sonOkunanVeri){
+        hataYaz("QR kodu yanlış okundu veya veri bulunamadı.");
+      }
     }
   } catch(e){
-    document.getElementById("c").innerHTML =
-      '<p class="err">Veri okunamadı.</p>';
+    hataYaz("Veri okunamadı.");
   }
 }
 
-// Sayfa ilk açıldığında çalışır
+// İlk açılışta çalışır
 oku();
 
-// Aynı sekmede yeni QR okutulursa hash değişimini yakalar
+// Hash değişirse tekrar oku
 window.addEventListener("hashchange", oku);
 
-// Mobil tarayıcı sekmeye geri dönünce tekrar kontrol eder
+// Mobilde sekmeye geri dönünce tekrar kontrol et
 window.addEventListener("pageshow", oku);
 window.addEventListener("focus", oku);
+
 document.addEventListener("visibilitychange", function(){
   if(!document.hidden){
     oku();
   }
 });
+
+// Bazı telefonlarda event çalışmazsa diye yedek kontrol
+setInterval(oku, 500);
 </script>
 
 </body>
