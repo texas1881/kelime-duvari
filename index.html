@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title></title>
+<title>Kelime Anlamı</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+
 body{
   font-family:Inter,sans-serif;
   min-height:100vh;
@@ -20,10 +21,12 @@ body{
   padding:2rem 1rem;
   -webkit-font-smoothing:antialiased
 }
+
 @keyframes rise{
   from{opacity:0;transform:translateY(20px)}
   to{opacity:1;transform:translateY(0)}
 }
+
 .card{
   background:rgba(255,255,255,.85);
   backdrop-filter:blur(20px);
@@ -37,6 +40,7 @@ body{
   text-align:center;
   animation:rise .6s ease both
 }
+
 .word{
   font-family:"DM Serif Display",serif;
   font-size:2.8rem;
@@ -45,6 +49,7 @@ body{
   line-height:1.1;
   word-break:break-word
 }
+
 .line{
   width:40px;
   height:2px;
@@ -53,6 +58,7 @@ body{
   border-radius:2px;
   opacity:.6
 }
+
 .meaning{
   font-family:Inter,sans-serif;
   font-size:1.05rem;
@@ -62,11 +68,13 @@ body{
   margin-bottom:2.5rem;
   letter-spacing:.01em
 }
+
 .err{
   color:#c44;
   font-size:1rem;
   padding:2rem
 }
+
 @media(max-width:480px){
   .card{padding:2.5rem 1.5rem;border-radius:20px}
   .word{font-size:2rem}
@@ -75,26 +83,48 @@ body{
 </head>
 
 <body>
-<div class="card" id="c">
-  <div class="word" id="w"></div>
-  <div class="line"></div>
-  <div class="meaning" id="m"></div>
-</div>
+
+<div class="card" id="c"></div>
 
 <script>
-try{
-  if(location.hash && location.hash.indexOf("#v=")===0){
-    var d = JSON.parse(decodeURIComponent(location.hash.substring(3)));
-    document.getElementById("w").textContent = d.k;
-    document.getElementById("m").textContent = d.a;
-  } else {
+function oku(){
+  try{
+    if(location.hash && location.hash.indexOf("#v=") === 0){
+      var d = JSON.parse(decodeURIComponent(location.hash.substring(3)));
+
+      document.getElementById("c").innerHTML = `
+        <div class="word" id="w"></div>
+        <div class="line"></div>
+        <div class="meaning" id="m"></div>
+      `;
+
+      document.getElementById("w").textContent = d.k || "";
+      document.getElementById("m").textContent = d.a || "";
+
+    } else {
+      document.getElementById("c").innerHTML =
+        '<p class="err">QR kodu yanlış okundu veya veri bulunamadı.</p>';
+    }
+  } catch(e){
     document.getElementById("c").innerHTML =
-      '<p class="err">QR kodu yanlış okundu veya veri bulunamadı.</p>';
+      '<p class="err">Veri okunamadı.</p>';
   }
-} catch(e){
-  document.getElementById("c").innerHTML =
-    '<p class="err">Veri okunamadı.</p>';
 }
+
+// Sayfa ilk açıldığında çalışır
+oku();
+
+// Aynı sekmede yeni QR okutulursa hash değişimini yakalar
+window.addEventListener("hashchange", oku);
+
+// Mobil tarayıcı sekmeye geri dönünce tekrar kontrol eder
+window.addEventListener("pageshow", oku);
+window.addEventListener("focus", oku);
+document.addEventListener("visibilitychange", function(){
+  if(!document.hidden){
+    oku();
+  }
+});
 </script>
 
 </body>
