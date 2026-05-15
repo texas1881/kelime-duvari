@@ -1,2 +1,2 @@
-# kelime-duvari
-Kelime Duvari - QR Kod Projesi
+
+QR Kod Projesi
